@@ -1,30 +1,43 @@
-import sangria.schema.{ObjectType, fields, Schema}
+import sangria.schema._
+import sangria.macros.derive._
 
 object SchemaDefinition {
-  val QueryType = ObjectType(
+
+  val CustomerType: ObjectType[Unit, Customer] = deriveObjectType[Unit, Customer]()
+  
+  val QueryType: ObjectType[CustomerService, Unit] = ObjectType(
     "Query",
     fields[CustomerService, Unit](
-      Field("customers", ListType(CustomerType), resolve = _.ctx.getAllCustomers)
+      Field(
+        name = "customers",
+        fieldType = ListType(CustomerType),
+        resolve = _.ctx.getAllCustomers
+      )
     )
   )
-
-  val MutationType = ObjectType(
+  
+  val IdArg = Argument("id", StringType)
+  val FirstNameArg = Argument("firstName", StringType)
+  val LastNameArg = Argument("lastName", StringType)
+  val EmailArg = Argument("email", StringType)
+  
+  val MutationType: ObjectType[CustomerService, Unit] = ObjectType(
     "Mutation",
     fields[CustomerService, Unit](
-      Field("createCustomer", CustomerType, arguments = List(
-        Argument("id", StringType),
-        Argument("firstName", StringType),
-        Argument("lastName", StringType),
-        Argument("email", StringType)
-      ), resolve = { ctx =>
-        val id = ctx.arg[String]("id")
-        val firstName = ctx.arg[String]("firstName")
-        val lastName = ctx.arg[String]("lastName")
-        val email = ctx.arg[String]("email")
-        ctx.ctx.createCustomer(Customer(id, firstName, lastName, email))
-      })
+      Field(
+        name = "createCustomer",
+        fieldType = CustomerType,
+        arguments = IdArg :: FirstNameArg :: LastNameArg :: EmailArg :: Nil,
+        resolve = { ctx =>
+          val id = ctx.arg(IdArg)
+          val firstName = ctx.arg(FirstNameArg)
+          val lastName = ctx.arg(LastNameArg)
+          val email = ctx.arg(EmailArg)
+          ctx.ctx.createCustomer(Customer(id, firstName, lastName, email))
+        }
+      )
     )
   )
-
+  
   val schema: Schema[CustomerService, Unit] = Schema(QueryType, Some(MutationType))
 }
