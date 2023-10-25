@@ -1,0 +1,32 @@
+   apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: trueml-backend-scala-deployment
+    spec:
+      replicas: 3
+      selector:
+        matchLabels:
+          app: trueml-backend-scala
+      template:
+        metadata:
+          labels:
+            app: trueml-backend-scala
+        spec:
+          containers:
+          - name: trueml-backend-scala
+            image: <account-id>.dkr.ecr.<region>.amazonaws.com/trueml-backend-scala:latest
+            ports:
+            - containerPort: 8080
+    ---
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: trueml-backend-scala-service
+    spec:
+      type: LoadBalancer
+      selector:
+        app: trueml-backend-scala
+      ports:
+        - protocol: TCP
+          port: 80
+          targetPort: 8080
